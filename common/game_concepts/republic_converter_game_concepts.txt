@@ -1,0 +1,4 @@
+﻿
+default_republic_converter_behavior = {
+	parent = government
+}

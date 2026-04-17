@@ -1,0 +1,24 @@
+﻿
+immediate_convert_republics_decision = {
+	decision_group_type = debug
+	
+	picture = {
+		reference = "gfx/interface/illustrations/decisions/decision_dynasty_house.dds"
+	}
+
+	ai_check_interval = 0
+
+	is_shown = {
+		is_ai = no
+	}
+
+	effect = {
+		trigger_event = {
+			on_action = republic_converter_on_game_start
+		}
+	}
+
+	ai_will_do = {
+		base = 0 # never takes this decision, which is more of a debug decision
+	}
+}

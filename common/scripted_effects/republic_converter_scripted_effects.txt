@@ -1,0 +1,130 @@
+﻿
+convert_republic_government = {
+	switch = {
+		trigger = has_game_rule
+		republic_conversion_default = {
+			if = {
+				limit = {
+					is_independent_ruler = no
+					liege = { government_allows = administrative }
+				}
+				convert_republic_switch_gov_effect = { GOVERNMENT = liege.government_type }
+			}
+			else_if = {
+				limit = {
+					geographical_region = world_steppe
+					OR = {
+						AND = {
+							is_independent_ruler = no
+							liege = { is_nomad = yes }
+						}
+						any_neighboring_top_liege_realm_owner = { is_nomad = yes }
+					}
+				}
+				convert_republic_switch_gov_effect = { GOVERNMENT = steppe_admin_government }
+			}
+			else_if = {
+				limit = {
+					location = { geographical_region = world_asia_japan }
+					NOT = { has_global_variable = shogunate_established }
+				}
+				convert_republic_switch_gov_effect = { GOVERNMENT = japan_administrative_government }
+			}
+			else_if = {
+				limit = {
+					OR = {
+						location = { geographical_region = world_asia } # this seems to refer to East Asia as a whole, including Northeast and Southeast
+						AND = {
+							location = { geographical_region = world_asia_japan }
+							has_global_variable = shogunate_established # shogunate abolished ritsuryo
+						}
+					}
+				}
+				convert_republic_switch_gov_effect = { GOVERNMENT = meritocratic_government }
+			}
+			else = {
+				convert_republic_switch_gov_effect = { GOVERNMENT = administrative_government }
+			}
+		}
+		republic_conversion_administrative = {
+			convert_republic_switch_gov_effect = { GOVERNMENT = administrative_government }
+		}
+		republic_conversion_meritocratic = {
+			convert_republic_switch_gov_effect = { GOVERNMENT = meritocratic_government }
+		}
+		republic_conversion_steppe_admin = {
+			convert_republic_switch_gov_effect = { GOVERNMENT = steppe_admin_government }
+		}
+		republic_conversion_celestial = {
+			convert_republic_switch_gov_effect = { GOVERNMENT = celestial_government }
+		}
+		republic_conversion_ritsuryo = {
+			convert_republic_switch_gov_effect = { GOVERNMENT = japan_administrative_government }
+		}
+	}
+}
+
+convert_republic_switch_gov_effect = {
+	# switch to target government, because some triggers are character-only
+	if = {
+		limit = {
+			OR = {
+				AND = {
+					has_ep3_dlc_trigger = yes # needed for Byz admin
+					administrative_government = $GOVERNMENT$
+				}
+				AND = {
+					has_tgp_dlc_trigger = yes # needed for Eastern admins
+					OR = {
+						celestial_government = $GOVERNMENT$
+						meritocratic_government = $GOVERNMENT$
+						steppe_admin_government = $GOVERNMENT$
+						japan_administrative_government = $GOVERNMENT$
+					}
+				}
+			}
+		}
+		change_government = $GOVERNMENT$
+		convert_republic_switch_gov_fallback_effect = yes
+		if = {
+			limit = { government_allows = administrative }
+			give_new_noble_family_title_effect = yes
+		}
+	}
+}
+
+convert_republic_switch_gov_fallback_effect = {
+	switch = {
+		trigger = has_game_rule
+		republic_conversion_under_main_tier_handling_title = {
+			if = {
+				limit = { highest_held_title_tier < main_administrative_tier }
+				convert_republic_switch_gov_titular_fallback_effect = { MIN_TIER = main_administrative_tier }
+			}
+		}
+		republic_conversion_under_main_tier_handling_none = {
+			change_government = republic_government # revert conversion
+		}
+	}
+}
+
+convert_republic_switch_gov_titular_fallback_effect = {
+	primary_title = {
+		save_scope_as = old_title
+	}
+	create_dynamic_title = {
+		tier = $MIN_TIER$
+		name = NEW_CREATED_TITLE_NAME
+	}
+	create_title_and_vassal_change = {
+		type = created
+		save_scope_as = change
+		add_claim_on_loss = no
+	}
+	scope:new_title = {
+		change_title_holder = {
+			holder = root
+			change = scope:change
+		}
+	}
+}

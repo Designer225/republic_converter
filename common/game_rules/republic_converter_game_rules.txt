@@ -1,0 +1,20 @@
+﻿
+republic_conversion = {
+	categories = { historicity republic_converter }
+	default = republic_conversion_default
+	republic_conversion_default = {}
+	republic_conversion_administrative = {}
+	republic_conversion_meritocratic = {}
+	republic_conversion_steppe_admin = {}
+	republic_conversion_celestial = {}
+	republic_conversion_ritsuryo = {}
+	republic_conversion_none = {}
+}
+
+republic_conversion_under_main_tier_handling = {
+	categories = { historicity republic_converter }
+	default = republic_conversion_under_main_tier_handling_title
+	republic_conversion_under_main_tier_handling_title = {}
+	republic_conversion_under_main_tier_handling_as_is = {}
+	republic_conversion_under_main_tier_handling_none = {}
+}

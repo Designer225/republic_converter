@@ -1,0 +1,104 @@
+﻿
+on_title_gain = {
+	on_actions = {
+		on_title_gained_as_republic
+	}
+}
+
+on_title_gain_inheritance = {
+	on_actions = {
+		on_title_gained_as_republic
+	}
+}
+
+on_title_gain_usurpation = {
+	on_actions = {
+		on_title_gained_as_republic
+	}
+}
+
+on_rank_up = {
+	on_actions = {
+		on_title_gained_as_republic
+	}
+}
+
+on_primary_title_change = {
+	on_actions = {
+		on_title_gained_as_republic
+	}
+}
+
+on_game_start = {
+	on_actions = {
+		republic_converter_on_game_start
+	}
+}
+
+republic_converter_on_game_start = {
+	effect = {
+		# starting from highest tier to lowest tier to proper handling
+		# due to effects in on_title_gained_as_republic some vassals are also handled before their usual slots
+		every_ruler = {
+			limit = {
+				has_government = republic_government
+				highest_held_title_tier = tier_hegemony # this basically should not exist unless every playable ruler has been eating crayons
+			}
+			trigger_event = {
+				on_action = on_title_gained_as_republic
+			}
+		}
+		every_ruler = {
+			limit = {
+				has_government = republic_government
+				highest_held_title_tier = tier_empire # this basically should not exist unless every playable ruler has been eating crayons
+			}
+			trigger_event = {
+				on_action = on_title_gained_as_republic
+			}
+		}
+		every_ruler = {
+			limit = {
+				has_government = republic_government
+				highest_held_title_tier = tier_kingdom # surprisingly this describes in-game historical merchant republics of Venice and Genoa, as well as others like Novgorod
+			}
+			trigger_event = {
+				on_action = on_title_gained_as_republic
+			}
+		}
+		every_ruler = {
+			limit = {
+				has_government = republic_government
+				highest_held_title_tier = tier_duchy
+			}
+			trigger_event = {
+				on_action = on_title_gained_as_republic
+			}
+		}
+		every_ruler = {
+			limit = {
+				has_government = republic_government
+				highest_held_title_tier = tier_county # historical Lombard league members were mostly republics in-game
+			}
+			trigger_event = {
+				on_action = on_title_gained_as_republic
+			}
+		}
+	}
+}
+
+on_title_gained_as_republic = {
+	trigger = {
+		has_government = republic_government # specifically this republic and only this republic
+		highest_held_title_tier >= tier_county
+	}
+
+	effect = {
+		convert_republic_government = yes
+		every_vassal = {
+			trigger_event = {
+				on_action = on_title_gained_as_republic
+			}
+		}
+	}
+}
