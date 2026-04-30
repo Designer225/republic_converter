@@ -20,7 +20,26 @@ convert_republic_government = {
 						convert_republic_switch_to_steppe_admin = yes
 					}
 					japan_administrative_government = {
-						convert_republic_switch_to_japan_administrative = yes
+						if = {
+							limit = {
+								NOT = { has_global_variable = shogunate_established }
+							}
+							convert_republic_switch_to_japan_administrative = yes
+						}
+						else = {
+							convert_republic_switch_to_meritocratic = yes
+						}
+					}
+					japan_feudal_government = {
+						if = {
+							limit = {
+								NOT = { has_global_variable = shogunate_established }
+							}
+							convert_republic_switch_to_japan_administrative = yes
+						}
+						else = {
+							convert_republic_switch_to_meritocratic = yes
+						}
 					}
 					fallback = {
 						convert_republic_switch_to_administrative = yes
@@ -61,11 +80,11 @@ convert_republic_government = {
 			else_if = {
 				limit = {
 					OR = {
-						location = { geographical_region = world_asia } # this seems to refer to East Asia as a whole, including Northeast and Southeast
 						AND = {
 							location = { geographical_region = world_asia_japan }
 							has_global_variable = shogunate_established # shogunate abolished ritsuryo
 						}
+						location = { geographical_region = world_asia } # this seems to refer to East Asia as a whole, including Northeast and Southeast
 					}
 				}
 				convert_republic_switch_to_meritocratic = yes
@@ -99,7 +118,7 @@ convert_republic_switch_to_administrative = {
 		convert_republic_switch_gov_fallback_effect = yes
 		if = {
 			limit = { government_allows = administrative }
-			give_new_noble_family_title_effect = yes
+			convert_republic_switch_gov_initialize_effect = yes
 		}
 	}
 }
@@ -111,7 +130,7 @@ convert_republic_switch_to_meritocratic = {
 		convert_republic_switch_gov_fallback_effect = yes
 		if = {
 			limit = { government_allows = administrative }
-			give_new_noble_family_title_effect = yes
+			convert_republic_switch_gov_initialize_effect = yes
 		}
 	}
 }
@@ -123,7 +142,7 @@ convert_republic_switch_to_steppe_admin = {
 		convert_republic_switch_gov_fallback_effect = yes
 		if = {
 			limit = { government_allows = administrative }
-			give_new_noble_family_title_effect = yes
+			convert_republic_switch_gov_initialize_effect = yes
 		}
 	}
 }
@@ -135,7 +154,7 @@ convert_republic_switch_to_celestial = {
 		convert_republic_switch_gov_fallback_effect = yes
 		if = {
 			limit = { government_allows = administrative }
-			give_new_noble_family_title_effect = yes
+			convert_republic_switch_gov_initialize_effect = yes
 		}
 	}
 }
@@ -147,7 +166,7 @@ convert_republic_switch_to_japan_administrative = {
 		convert_republic_switch_gov_fallback_effect = yes
 		if = {
 			limit = { government_allows = administrative }
-			give_new_noble_family_title_effect = yes
+			convert_republic_switch_gov_initialize_effect = yes
 		}
 	}
 }
@@ -172,7 +191,14 @@ convert_republic_switch_gov_titular_fallback_effect = {
 		save_scope_as = old_title
 	}
 	if = {
-		limit = { main_administrative_tier = tier_kingdom }
+		limit = {
+			OR = {
+				main_administrative_tier = tier_kingdom
+				# base game admin estates are duchy-tier, which is frankly out-of-date now that we have county-tier estates, so this had to be added as a special case
+				# this should not be a problem if you play with TAO
+				min_appointment_tier = tier_duchy
+			}
+		}
 		create_dynamic_title = {
 			tier = kingdom
 			name = NEW_CREATED_TITLE_NAME
@@ -192,11 +218,124 @@ convert_republic_switch_gov_titular_fallback_effect = {
 	scope:new_title = {
 		set_coa = scope:old_title
 		set_color_from_title = scope:old_title
-		set_delete_on_destroy = yes
-		set_destroy_on_gain_same_tier = yes
+		# set_delete_on_destroy = yes
+		# set_destroy_on_gain_same_tier = yes
+		set_local_variable = {
+			name = title_diff
+			value = {
+				value = tier
+				subtract = scope:old_title.tier
+			}
+		}
+		if = {
+			limit = {
+				local_var:title_diff = 2
+				exists = scope:old_title.de_jure_liege
+				exists = scope:old_title.de_jure_liege.de_jure_liege
+				exists = scope:old_title.de_jure_liege.de_jure_liege.de_jure_liege
+			}
+			set_de_jure_liege_title = scope:old_title.de_jure_liege.de_jure_liege.de_jure_liege
+		}
+		else_if = {
+			limit = {
+				local_var:title_diff = 1
+				exists = scope:old_title.de_jure_liege
+				exists = scope:old_title.de_jure_liege.de_jure_liege
+			}
+			set_de_jure_liege_title = scope:old_title.de_jure_liege.de_jure_liege
+		}
 		change_title_holder = {
 			holder = root
 			change = scope:change
+		}
+	}
+	resolve_title_and_vassal_change = scope:change
+}
+
+convert_republic_switch_gov_initialize_effect = {
+	# add family title for ruler
+	if = {
+		limit = {
+			OR = {
+				is_independent_ruler = yes # independent ruler is allowed to get a title
+				AND = {
+					exists = liege
+					NOT = { government_allows = administrative } # if liege is not administrative, vassal is allowed a title
+				}
+				AND = {
+					is_house_head = yes
+					trigger_if = {
+						limit = {
+							government_has_flag = government_is_japan_feudal
+						}
+						highest_held_title_tier >= tier_county
+					}
+					trigger_else_if = {
+						# To avoid noble family spam, we only create family titles for county tier if that is also the primary governor tier.
+						limit = { main_administrative_tier = tier_county }
+						highest_held_title_tier >= tier_county
+					}
+					trigger_else = { highest_held_title_tier >= tier_duchy }
+					NOR = {
+						any_held_title = { is_noble_family_title = yes }
+						house = {
+							any_house_member = {
+								any_held_title = { is_noble_family_title = yes }
+							}
+						}
+					}
+				}
+			}
+		}
+		create_noble_family_effect = { GOVERNMENT_GIVER = this }
+		domicile ?= { set_up_domicile_estate_effect = yes }
+	}
+	# populate with several characters with their own family titles
+	save_scope_as = liege_temp
+	create_title_and_vassal_change = {
+		type = created
+		save_scope_as = change
+	}
+	while = {
+		count = 10
+
+		create_character = {
+			employer = scope:liege_temp
+			faith = scope:liege_temp.faith
+			culture = scope:liege_temp.culture
+			gender_female_chance = root_faith_dominant_gender_female_chance
+			dynasty = generate
+			save_scope_as = new_noble
+		}
+		scope:new_noble = {
+			if = {
+				limit = {
+					scope:liege_temp = { government_allows = merit }
+				}
+				switch = {
+					trigger = scope:liege_temp.highest_held_title_tier
+					tier_county = {} # no merit for county-only lieges
+					tier_duchy = {
+						change_merit = county_starting_merit_value
+					}
+					tier_kingdom = {
+						change_merit = duchy_starting_merit_value
+					}
+					tier_empire = {
+						change_merit = kingdom_starting_merit_value
+					}
+					fallback = {
+						change_merit = empire_starting_merit_value
+					}
+				}
+				assign_completed_exams_based_on_merit_effect = yes
+			}
+			create_noble_family_effect = { GOVERNMENT_GIVER = scope:liege_temp }
+			# in case family breaks free for some reason
+			change_liege = {
+				liege = scope:liege_temp
+				change = scope:change
+			}
 		}
 	}
 	resolve_title_and_vassal_change = scope:change
